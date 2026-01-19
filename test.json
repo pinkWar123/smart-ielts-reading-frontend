@@ -1,0 +1,97 @@
+{"passages": [
+        {"title": "Travelling Plants", "content": "Plants need to produce more individuals of their own kind, and these normally grow best from their parent. So plants need to travel, and they do so in a variety of ways.\n\nIn an English woodland, the blackberry puts out exploratory stems, which curve upwards, waving slowly as though searching. If they touch another plant, they begin to advance directly and purposefully. To us, their motion is invisible, but for a plant it"s an extraordinary rate – around five centimetres a day. When a stem makes contact with the ground, it puts down small rootlets, and starts to extract nutriment.\n\nThe silverweed is equally effective, putting out travelling stems that advance horizontally, creeping at low level through the mat of rootlets and dead vegetation formed by other plants.\n\nIn meadows, fescue grass is notable for annexing land from other less robust and aggressive species. The genetic fingerprints of its leaves and stems taken two hundred metres apart have proved, in some instances, to be identical. This must mean that one particularly vigorous plant has increased its territory year after year until now, after perhaps a century, it has become the largest plant in the entire meadow.\n\nThe bird-cage plant grows among sand dunes, in the deserts of the American west, and puts down long roots to search for water. But if the sand blows away, the plant"s roots may shrivel up, the plant dies, and the stems form a hollow sphere. With no roots to anchor it, the wind blows it across the sand for several kilometres. Eventually it rolls into a sheltered site, allowing the seeds inside to germinate.\n\nA few plants don"t need external assistance to distribute their seeds. The Mediterranean squirting cucumber fills with a slimy juice as it ripens. Eventually the juice shifts so violently that the cucumber bursts off its stalk and shoots five or six metres through the air, leaving a trail of slime and seeds behind it.\n\nOne of the most dramatic detonating seed-containers belongs to a Brazilian tree known as monkey"s dinner-bell. The side of the seed pod facing the sun dries out, causing an explosion which can hurl the seeds over twelve metres. The bang is enough to convince nervous strangers in the forest that they"re under attack.\n\nIt"s particularly important for trees that their seeds move far enough away to gain adequate light and nutriment. This is helped by the height of the tree, and in some cases by fitting their seeds with wings. Sycamore seeds, for instance, have a single wing, sprouting from one side. This makes the seed spin, and even in a light breeze, these tiny spinning helicopters can land far from their parent.\n\nInstead of using wind or water as carriers, many plants use animals. The South African grapple plant, a low-growing creeper, relies on its seeds being trodden on. Its seed capsules have arms ending in hooks that are so sharp and strong, and point in so many directions, that when the foot of an elephant or rhino descends on one, the capsule becomes attached, and is carried by the animal.\n\nOther plants reward their carriers instead of hurting them. Many plants that grow in the heathland of South Africa provide their seeds with an edible covering which ants find particularly attractive. These collect the seeds and carry them down to their underground nests, where they eat the covering, leaving the seeds themselves in an ideal position to germinate.\n\nFruit seeds are completely enclosed with such a generous edible reward that the animal-carrier is encouraged to swallow both together. While the plant is constructing the seeds, the flesh of the unripe fruit is sour, and animals learn not to eat it. But once the seeds are fully developed, the sap becomes sweet, and the fruit signals the fact that the seeds are now ready for transport by changing colour. Animals understand the signals well. They now eat the fruit, and carry the seed away inside their stomachs, to be ejected at a distance. Not all seeds have to pass through the entire digestive tract to be transported, though. The quetzal, a Central American bird, feeds on the wild avocado, swallowing it whole. It eventually regurgitates the stone, which then has a chance to take root and produce a new plant.\n\nPassage through an animal"s gut is essential for some seeds, however. When the acacia of East Africa produces its seed-bearing pods, beetles fly in, lay eggs, and as the grubs hatch, they feed on the acacia seeds. The seeds can only grow if an elephant, or other animal, eats the pod, as its digestive juices kill the eggs. Eventually the seeds return to the outside world in the animal"s droppings, and can germinate.\n\nWhile the seeds of pine trees are developing, they"re protected inside cones. When the seeds are ripe, one bird, the nut-cracker, is particularly skilful at picking them out. Those it can"t eat immediately it buries, providing the seed with ideal growing conditions. But two out of every three seeds that the bird buries, it never finds again, so the tree uses a strategy of sacrificing a few of its seeds and relying on the poor memory of the courier who takes and conceals them. So in one way or another, many seeds reach destinations where they can start their lives away from the environmental dominance of their parents.", "difficulty_level": 3, "topic": "Science", "source": None, "question_groups": [
+                {"id": "qg_1", "group_instructions": "Complete each sentence with the correct ending, A-I, below.", "question_type": "MATCHING_SENTENCE_ENDINGS", "start_question_number": 27, "end_question_number": 33, "order_in_passage": 1, "options": [
+                        {"label": "A", "text": "can dominate its surroundings with a single plant."
+                        },
+                        {"label": "B", "text": "explodes as a result of internal pressure."
+                        },
+                        {"label": "C", "text": "has seeds which have a feature that increases the distance they travel."
+                        },
+                        {"label": "D", "text": "colonises a new spot when it can no longer survive in another."
+                        },
+                        {"label": "E", "text": "moves along close to the ground."
+                        },
+                        {"label": "F", "text": "produces a loud noise when it distributes its seeds."
+                        },
+                        {"label": "G", "text": "relies on human activity to distribute its seeds."
+                        },
+                        {"label": "H", "text": "requires water every day."
+                        },
+                        {"label": "I", "text": "produces branches that spread out very quickly into the air."
+                        }
+                    ]
+                },
+                {"id": "qg_2", "group_instructions": "Complete the sentences below. Choose ONE WORD ONLY from the passage for each answer.", "question_type": "SENTENCE_COMPLETION", "start_question_number": 34, "end_question_number": 39, "order_in_passage": 2, "options": None
+                }
+            ], "questions": [
+                {"question_number": 27, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "The blackberry", "options": None, "correct_answer": {"answer": "D", "acceptable_answers": ["D"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 1, "question_group_id": "qg_1"
+                },
+                {"question_number": 28, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "The silverweed", "options": None, "correct_answer": {"answer": "E", "acceptable_answers": ["E"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 2, "question_group_id": "qg_1"
+                },
+                {"question_number": 29, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "Fescue grass", "options": None, "correct_answer": {"answer": "A", "acceptable_answers": ["A"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 3, "question_group_id": "qg_1"
+                },
+                {"question_number": 30, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "The bird-cage plant", "options": None, "correct_answer": {"answer": "D", "acceptable_answers": ["D"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 4, "question_group_id": "qg_1"
+                },
+                {"question_number": 31, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "The Mediterranean squirting cucumber", "options": None, "correct_answer": {"answer": "B", "acceptable_answers": ["B"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 5, "question_group_id": "qg_1"
+                },
+                {"question_number": 32, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "Monkey"s dinner-bell", "options": None, "correct_answer": {"answer": "F", "acceptable_answers": ["F"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 6, "question_group_id": "qg_1"
+                },
+                {"question_number": 33, "question_type": "MATCHING_SENTENCE_ENDINGS", "question_text": "The sycamore", "options": None, "correct_answer": {"answer": "C", "acceptable_answers": ["C"
+                        ]
+                    }, "explanation": None, "instructions": "Write the correct letter, A-I, in boxes 27-33 on your answer sheet.", "points": 1, "order_in_passage": 7, "question_group_id": "qg_1"
+                },
+                {"question_number": 34, "question_type": "SENTENCE_COMPLETION", "question_text": "South African heathland plants are covered with a substance that appears to", "options": None, "correct_answer": {"answer": "attractive", "acceptable_answers": ["attractive"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 8, "question_group_id": "qg_2"
+                },
+                {"question_number": 35, "question_type": "SENTENCE_COMPLETION", "question_text": "The seeds of South African heathland plants are carried into in the earth.", "options": None, "correct_answer": {"answer": "nests", "acceptable_answers": ["nests"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 9, "question_group_id": "qg_2"
+                },
+                {"question_number": 36, "question_type": "SENTENCE_COMPLETION", "question_text": "Animals don"t like to eat that is unripe because of the taste.", "options": None, "correct_answer": {"answer": "fruit", "acceptable_answers": ["fruit"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 10, "question_group_id": "qg_2"
+                },
+                {"question_number": 37, "question_type": "SENTENCE_COMPLETION", "question_text": "The quetzal ejects the of the wild avocado through its mouth.", "options": None, "correct_answer": {"answer": "stone", "acceptable_answers": ["stone"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 11, "question_group_id": "qg_2"
+                },
+                {"question_number": 38, "question_type": "SENTENCE_COMPLETION", "question_text": "Pine seeds are contained in their until they are mature.", "options": None, "correct_answer": {"answer": "cones", "acceptable_answers": ["cones"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 12, "question_group_id": "qg_2"
+                },
+                {"question_number": 39, "question_type": "SENTENCE_COMPLETION", "question_text": "The pine tree benefits because the nut-cracker bird has a bad", "options": None, "correct_answer": {"answer": "memory", "acceptable_answers": ["memory"
+                        ]
+                    }, "explanation": None, "instructions": "Choose ONE WORD ONLY from the passage for each answer.", "points": 1, "order_in_passage": 13, "question_group_id": "qg_2"
+                },
+                {"question_number": 40, "question_type": "MULTIPLE_CHOICE", "question_text": "Which of the following best summarises Reading Passage 3?", "options": [
+                        {"label": "A", "text": "The movement of plants provides benefits for animals and other creatures."
+                        },
+                        {"label": "B", "text": "Plants can move much faster than is generally realised."
+                        },
+                        {"label": "C", "text": "The methods by which plants move are adapted to their surroundings."
+                        },
+                        {"label": "D", "text": "Animals play a significant role in the movement of plants."
+                        }
+                    ], "correct_answer": {"answer": "C", "acceptable_answers": ["C"
+                        ]
+                    }, "explanation": None, "instructions": "Choose the correct letter, A, B, C, or D. Write the correct letter in box 40 on your answer sheet.", "points": 1, "order_in_passage": 14, "question_group_id": None
+                }
+            ]
+        }
+    ], "test_metadata": {"title": "Reading Passage 3: Travelling Plants", "description": "IELTS Reading test with Questions 27-40 based on a passage about how plants distribute and travel.", "total_questions": 14, "estimated_time_minutes": 20, "test_type": "SINGLE_PASSAGE"
+    }, "extraction_notes": ["All 14 questions (27-40) extracted from the passage", "Questions 27-33 are matching sentence endings type", "Questions 34-39 are sentence completion with single word answers from passage", "Question 40 is multiple choice with A, B, C, D options", "Passage content extracted completely and accurately", "Answers inferred from passage content where visible in instructions"
+    ], "confidence_score": 0.92
+}
