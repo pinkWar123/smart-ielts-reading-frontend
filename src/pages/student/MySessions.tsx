@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSessionStore } from '@/lib/stores/sessionStore';
 import { useClassStore } from '@/lib/stores/classStore';
@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Calendar,
   Clock,
-  Users,
   Loader2,
   AlertCircle,
   ChevronRight,
@@ -17,7 +16,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/authStore';
-import type { Session, SessionStatus } from '@/lib/api/sessions';
+import type { StudentSessionDTO, SessionStatus } from '@/lib/api/sessions';
 
 const getStatusBadgeVariant = (status: SessionStatus) => {
   switch (status) {
@@ -56,7 +55,7 @@ const getStatusLabel = (status: SessionStatus): string => {
 export const MySessions: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { sessions, loading, error, fetchMySessions } = useSessionStore();
+  const { studentSessions, loading, error, fetchMySessions } = useSessionStore();
   const { classes, fetchClasses } = useClassStore();
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export const MySessions: React.FC = () => {
     fetchClasses();
   }, [fetchMySessions, fetchClasses]);
 
-  const handleJoinSession = (session: Session) => {
+  const handleJoinSession = (session: StudentSessionDTO) => {
     if (session.status === 'SCHEDULED') {
       // Can't join yet
       return;
@@ -82,11 +81,11 @@ export const MySessions: React.FC = () => {
     return class_?.name || 'Unknown Class';
   };
 
-  const scheduledSessions = sessions.filter((s) => s.status === 'SCHEDULED');
-  const activeSessions = sessions.filter(
+  const scheduledSessions = studentSessions.filter((s) => s.status === 'SCHEDULED');
+  const activeSessions = studentSessions.filter(
     (s) => s.status === 'WAITING_FOR_STUDENTS' || s.status === 'IN_PROGRESS'
   );
-  const completedSessions = sessions.filter((s) => s.status === 'COMPLETED');
+  const completedSessions = studentSessions.filter((s) => s.status === 'COMPLETED');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
@@ -301,7 +300,7 @@ export const MySessions: React.FC = () => {
             )}
 
             {/* No Sessions */}
-            {sessions.length === 0 && (
+            {studentSessions.length === 0 && (
               <Card className="bg-slate-900/50 border-slate-800">
                 <CardContent className="py-12">
                   <p className="text-center text-slate-500">No sessions found</p>

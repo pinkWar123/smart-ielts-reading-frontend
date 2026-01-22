@@ -15,47 +15,32 @@ import {
   Shield,
   Loader2,
   AlertCircle,
-  X,
   Search,
-  UserPlus,
-  UserMinus,
-  Archive,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/stores/authStore';
-import type { Class, User } from '@/lib/api/sessions';
 
 export const ClassManagement: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const {
     classes,
-    selectedClass,
-    availableStudents,
     loading,
     error,
     fetchClasses,
-    fetchClassById,
     createClass,
-    updateClass,
-    deleteClass,
-    enrollStudent,
-    removeStudent,
-    fetchAvailableStudents,
-    setSelectedClass,
     clearError,
   } = useClassStore();
 
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showClassDetails, setShowClassDetails] = useState(false);
   const [newClassName, setNewClassName] = useState('');
   const [newClassDescription, setNewClassDescription] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchClasses();
-    fetchAvailableStudents();
-  }, [fetchClasses, fetchAvailableStudents]);
+    // If teacher, only fetch their classes. If admin, fetch all classes.
+    const teacherId = user?.role === 'TEACHER' ? user.user_id : undefined;
+    fetchClasses(teacherId);
+  }, [fetchClasses, user]);
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,57 +58,13 @@ export const ClassManagement: React.FC = () => {
     }
   };
 
-  const handleViewClass = async (classId: string) => {
-    try {
-      await fetchClassById(classId);
-      setShowClassDetails(true);
-    } catch (err) {
-      // Error is handled by store
-    }
+  const handleViewClass = (classId: string) => {
+    navigate(`/admin/classes/${classId}`);
   };
 
-  const handleEnrollStudent = async (studentId: string) => {
-    if (!selectedClass) return;
-    try {
-      await enrollStudent(selectedClass.id, studentId);
-      await fetchClassById(selectedClass.id); // Refresh
-    } catch (err) {
-      // Error is handled by store
-    }
-  };
-
-  const handleRemoveStudent = async (studentId: string) => {
-    if (!selectedClass) return;
-    try {
-      await removeStudent(selectedClass.id, studentId);
-    } catch (err) {
-      // Error is handled by store
-    }
-  };
-
-  const handleArchiveClass = async (classId: string) => {
-    if (!confirm('Are you sure you want to archive this class?')) return;
-    try {
-      await deleteClass(classId);
-      setShowClassDetails(false);
-      setSelectedClass(null);
-    } catch (err) {
-      // Error is handled by store
-    }
-  };
-
-  const filteredClasses = classes.filter((c) =>
+  const filteredClasses = classes?.filter((c) =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredAvailableStudents = availableStudents.filter((s) =>
-    `${s.full_name} ${s.email}`.toLowerCase().includes(studentSearchQuery.toLowerCase())
-  );
-
-  const enrolledStudentIds = selectedClass?.student_ids || [];
-  const unenrolledStudents = filteredAvailableStudents.filter(
-    (s) => !enrolledStudentIds.includes(s.id)
-  );
+  ) ?? [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
@@ -276,7 +217,7 @@ export const ClassManagement: React.FC = () => {
         </div>
 
         {/* Classes List */}
-        {loading && !showClassDetails ? (
+        {loading ? (
           <Card className="bg-slate-900/50 border-slate-800">
             <CardContent className="py-12">
               <div className="flex flex-col items-center justify-center gap-3">
@@ -322,7 +263,7 @@ export const ClassManagement: React.FC = () => {
                 <CardContent>
                   <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <Users className="h-4 w-4" />
-                    <span>{class_.student_ids.length} students</span>
+                    <span>{class_.students_count} students</span>
                   </div>
                 </CardContent>
               </Card>
@@ -330,125 +271,6 @@ export const ClassManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Class Details Modal */}
-        {showClassDetails && selectedClass && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="bg-slate-900 border-slate-800 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-white text-2xl">{selectedClass.name}</CardTitle>
-                    {selectedClass.description && (
-                      <CardDescription className="text-slate-400 mt-1">
-                        {selectedClass.description}
-                      </CardDescription>
-                    )}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setShowClassDetails(false);
-                      setSelectedClass(null);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Enrolled Students */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">Enrolled Students</h3>
-                  {selectedClass.student_ids.length === 0 ? (
-                    <p className="text-slate-500">No students enrolled yet</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {availableStudents
-                        .filter((s) => selectedClass.student_ids.includes(s.id))
-                        .map((student) => (
-                          <div
-                            key={student.id}
-                            className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
-                          >
-                            <div>
-                              <p className="text-white font-medium">{student.full_name}</p>
-                              <p className="text-sm text-slate-400">{student.email}</p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveStudent(student.id)}
-                              className="text-red-400 hover:text-red-300"
-                            >
-                              <UserMinus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Add Student */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">Add Student</h3>
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                    <Input
-                      placeholder="Search students..."
-                      value={studentSearchQuery}
-                      onChange={(e) => setStudentSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800 border-slate-700 text-white"
-                    />
-                  </div>
-                  {unenrolledStudents.length === 0 ? (
-                    <p className="text-slate-500">No available students</p>
-                  ) : (
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {unenrolledStudents.map((student) => (
-                        <div
-                          key={student.id}
-                          className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
-                        >
-                          <div>
-                            <p className="text-white font-medium">{student.full_name}</p>
-                            <p className="text-sm text-slate-400">{student.email}</p>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEnrollStudent(student.id)}
-                            className="text-green-400 hover:text-green-300"
-                          >
-                            <UserPlus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-slate-700">
-                  <Button
-                    onClick={() => navigate(`/admin/sessions?classId=${selectedClass.id}`)}
-                    className="bg-indigo-600 hover:bg-indigo-500"
-                  >
-                    View Sessions
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleArchiveClass(selectedClass.id)}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10"
-                  >
-                    <Archive className="h-4 w-4 mr-2" />
-                    Archive Class
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </main>
     </div>
   );

@@ -295,14 +295,12 @@ export const createMockMessage = {
   participantJoined(
     sessionId: string,
     studentId: string,
-    studentName: string,
     connectedCount: number
   ): MockWebSocketMessage {
     return {
       type: 'participant_joined',
       session_id: sessionId,
       student_id: studentId,
-      student_name: studentName,
       connected_count: connectedCount,
       timestamp: new Date().toISOString(),
     };
@@ -311,14 +309,12 @@ export const createMockMessage = {
   participantDisconnected(
     sessionId: string,
     studentId: string,
-    studentName: string,
     connectedCount: number
   ): MockWebSocketMessage {
     return {
       type: 'participant_disconnected',
       session_id: sessionId,
       student_id: studentId,
-      student_name: studentName,
       connected_count: connectedCount,
       timestamp: new Date().toISOString(),
     };
@@ -370,36 +366,28 @@ export const createMockMessage = {
     sessionId: string,
     studentId: string,
     studentName: string,
-    passageIndex: number,
-    text: string,
-    startOffset: number = 0,
-    endOffset: number = 50
+    passageId: string,
+    text: string
   ): MockWebSocketMessage {
     return {
       type: 'student_highlight',
       session_id: sessionId,
       student_id: studentId,
       student_name: studentName,
-      passage_index: passageIndex,
-      start_offset: startOffset,
-      end_offset: endOffset,
-      highlighted_text: text.substring(0, 50),
+      passage_id: passageId,
+      text: text.substring(0, 100),  // Truncated to 100 chars per API spec
       timestamp: new Date().toISOString(),
     };
   },
 
   violation(
-    sessionId: string,
     studentId: string,
-    studentName: string,
     violationType: ViolationType,
     totalCount: number
   ): MockWebSocketMessage {
     return {
       type: 'violation',
-      session_id: sessionId,
       student_id: studentId,
-      student_name: studentName,
       violation_type: violationType,
       total_count: totalCount,
       timestamp: new Date().toISOString(),
@@ -410,7 +398,10 @@ export const createMockMessage = {
     sessionId: string,
     studentId: string,
     studentName: string,
-    score: number | null = null
+    score: number | null = null,
+    timeTakenSeconds: number = 0,
+    answeredQuestions: number = 0,
+    totalQuestions: number = 40
   ): MockWebSocketMessage {
     return {
       type: 'student_submitted',
@@ -418,36 +409,40 @@ export const createMockMessage = {
       student_id: studentId,
       student_name: studentName,
       score,
+      time_taken_seconds: timeTakenSeconds,
+      answered_questions: answeredQuestions,
+      total_questions: totalQuestions,
       timestamp: new Date().toISOString(),
     };
   },
 
   sessionStats(
     sessionId: string,
-    connectedStudents: number,
-    disconnectedStudents: number,
-    submittedStudents: number,
+    totalParticipants: number,
+    connectedCount: number,
+    submittedCount: number,
     averageProgress: number,
     totalViolations: number
   ): MockWebSocketMessage {
     return {
       type: 'session_stats',
       session_id: sessionId,
-      connected_students: connectedStudents,
-      disconnected_students: disconnectedStudents,
-      submitted_students: submittedStudents,
-      average_progress: averageProgress,
-      total_violations: totalViolations,
+      stats: {
+        total_participants: totalParticipants,
+        connected_count: connectedCount,
+        submitted_count: submittedCount,
+        average_progress: averageProgress,
+        total_violations: totalViolations,
+      },
       timestamp: new Date().toISOString(),
     };
   },
 
-  error(errorMessage: string, errorCode?: string): MockWebSocketMessage {
+  error(message: string, code: string): MockWebSocketMessage {
     return {
       type: 'error',
-      error: errorMessage,
-      error_code: errorCode,
-      timestamp: new Date().toISOString(),
+      message,
+      code,
     };
   },
 };

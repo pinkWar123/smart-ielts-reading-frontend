@@ -1,16 +1,18 @@
 import { create } from 'zustand';
-import { sessionsApi, type Class, type CreateClassRequest, type UpdateClassRequest, type User } from '../api/sessions';
+import { sessionsApi, type Class, type ClassListItem, type CreateClassRequest, type UpdateClassRequest, type User } from '../api/sessions';
+import type { PaginationMeta } from '../api/tests';
 
 interface ClassStore {
   // State
-  classes: Class[];
+  classes: ClassListItem[];
   selectedClass: Class | null;
   availableStudents: User[];
+  paginationMeta: PaginationMeta | null;
   loading: boolean;
   error: string | null;
 
   // Actions
-  fetchClasses: () => Promise<void>;
+  fetchClasses: (teacherId?: string) => Promise<void>;
   fetchClassById: (classId: string) => Promise<void>;
   createClass: (data: CreateClassRequest) => Promise<Class>;
   updateClass: (classId: string, data: UpdateClassRequest) => Promise<Class>;
@@ -27,15 +29,20 @@ export const useClassStore = create<ClassStore>((set, get) => ({
   classes: [],
   selectedClass: null,
   availableStudents: [],
+  paginationMeta: null,
   loading: false,
   error: null,
 
   // Fetch all classes
-  fetchClasses: async () => {
+  fetchClasses: async (teacherId?: string) => {
     set({ loading: true, error: null });
     try {
-      const classes = await sessionsApi.getAllClasses();
-      set({ classes, loading: false });
+      const response = await sessionsApi.getAllClasses(1, 10, 'created_at', 'desc', teacherId || null);
+      set({ 
+        classes: response.data, 
+        paginationMeta: response.meta,
+        loading: false 
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch classes';
       set({ error: message, loading: false });
@@ -49,14 +56,6 @@ export const useClassStore = create<ClassStore>((set, get) => ({
     try {
       const class_ = await sessionsApi.getClassById(classId);
       set({ selectedClass: class_, loading: false });
-      
-      // Update in classes list if exists
-      const classes = get().classes;
-      const index = classes.findIndex((c) => c.id === classId);
-      if (index >= 0) {
-        classes[index] = class_;
-        set({ classes: [...classes] });
-      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch class';
       set({ error: message, loading: false });
@@ -69,10 +68,8 @@ export const useClassStore = create<ClassStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const newClass = await sessionsApi.createClass(data);
-      set((state) => ({
-        classes: [...state.classes, newClass],
-        loading: false,
-      }));
+      // Refresh the list to get the updated paginated data
+      await get().fetchClasses();
       return newClass;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create class';
@@ -86,14 +83,10 @@ export const useClassStore = create<ClassStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedClass = await sessionsApi.updateClass(classId, data);
-      set((state) => {
-        const classes = state.classes.map((c) =>
-          c.id === classId ? updatedClass : c
-        );
-        const selectedClass =
-          state.selectedClass?.id === classId ? updatedClass : state.selectedClass;
-        return { classes, selectedClass, loading: false };
-      });
+      // Refresh the list to get updated data
+      await get().fetchClasses();
+      const selectedClass = get().selectedClass?.id === classId ? updatedClass : get().selectedClass;
+      set({ selectedClass, loading: false });
       return updatedClass;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to update class';
@@ -107,12 +100,10 @@ export const useClassStore = create<ClassStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await sessionsApi.deleteClass(classId);
-      set((state) => {
-        const classes = state.classes.filter((c) => c.id !== classId);
-        const selectedClass =
-          state.selectedClass?.id === classId ? null : state.selectedClass;
-        return { classes, selectedClass, loading: false };
-      });
+      // Refresh the list to get updated data
+      await get().fetchClasses();
+      const selectedClass = get().selectedClass?.id === classId ? null : get().selectedClass;
+      set({ selectedClass, loading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to delete class';
       set({ error: message, loading: false });
@@ -125,14 +116,10 @@ export const useClassStore = create<ClassStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedClass = await sessionsApi.enrollStudent(classId, studentId);
-      set((state) => {
-        const classes = state.classes.map((c) =>
-          c.id === classId ? updatedClass : c
-        );
-        const selectedClass =
-          state.selectedClass?.id === classId ? updatedClass : state.selectedClass;
-        return { classes, selectedClass, loading: false };
-      });
+      // Refresh the list to get updated student counts
+      await get().fetchClasses();
+      const selectedClass = get().selectedClass?.id === classId ? updatedClass : get().selectedClass;
+      set({ selectedClass, loading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to enroll student';
       set({ error: message, loading: false });

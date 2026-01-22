@@ -331,9 +331,9 @@ export const SessionTestInterface: React.FC = () => {
           break;
 
         case 'error':
-          if ('error' in message) {
-            console.error('WebSocket error message:', message.error);
-            setWarningMessage(`Error: ${message.error}`);
+          if ('message' in message) {
+            console.error('WebSocket error message:', message.message, 'Code:', message.code);
+            setWarningMessage(`Error: ${message.message}`);
             setShowWarning(true);
             setTimeout(() => setShowWarning(false), 5000);
           }

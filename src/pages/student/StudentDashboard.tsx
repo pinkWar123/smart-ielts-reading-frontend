@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  Calendar,
+  LogOut,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -209,6 +211,41 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Top Navigation Bar */}
+      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">IE</span>
+              </div>
+              <span className="font-semibold text-white">IELTS Practice</span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/student/sessions')}
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                My Sessions
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <div className="container mx-auto p-6 space-y-8">
         {/* Header */}
         <div className="text-center py-8">

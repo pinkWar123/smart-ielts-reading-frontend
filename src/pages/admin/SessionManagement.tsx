@@ -79,10 +79,15 @@ export const SessionManagement: React.FC = () => {
   const [loadingTests, setLoadingTests] = useState(false);
 
   useEffect(() => {
-    fetchSessions();
-    fetchClasses();
+    // If teacher, only fetch their sessions. If admin, fetch all or by class
+    const teacherId = user?.role === 'TEACHER' ? user.user_id : undefined;
+    fetchSessions(teacherId, classId || undefined);
+    
+    const teacherIdForClasses = user?.role === 'TEACHER' ? user.user_id : undefined;
+    fetchClasses(teacherIdForClasses);
+    
     loadTests();
-  }, [fetchSessions, fetchClasses]);
+  }, [fetchSessions, fetchClasses, user, classId]);
 
   useEffect(() => {
     if (classId) {
@@ -387,7 +392,7 @@ export const SessionManagement: React.FC = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <Users className="h-4 w-4" />
-                    <span>{session.participants.length} participants</span>
+                    <span>{session.participant_count} participants</span>
                   </div>
                   <div className="flex items-center gap-2 text-slate-400 text-sm">
                     <Clock className="h-4 w-4" />

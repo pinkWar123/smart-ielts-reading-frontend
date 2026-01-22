@@ -153,7 +153,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.participantJoined('session-123', 'student-1', 'Student One', 1)
+          createMockMessage.participantJoined('session-123', 'student-1', 1)
         );
       });
 
@@ -182,13 +182,13 @@ describe('WebSocket Integration Tests', () => {
       // Multiple students join
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.participantJoined('session-123', 'student-1', 'Student One', 1)
+          createMockMessage.participantJoined('session-123', 'student-1', 1)
         );
         mockWs?._simulateReceiveMessage(
-          createMockMessage.participantJoined('session-123', 'student-2', 'Student Two', 2)
+          createMockMessage.participantJoined('session-123', 'student-2', 2)
         );
         mockWs?._simulateReceiveMessage(
-          createMockMessage.participantJoined('session-123', 'student-3', 'Student Three', 3)
+          createMockMessage.participantJoined('session-123', 'student-3', 3)
         );
       });
 
@@ -524,10 +524,8 @@ describe('WebSocket Integration Tests', () => {
             'session-123',
             'student-1',
             'Student One',
-            0,
-            'This is highlighted text',
-            0,
-            24
+            'passage-0',
+            'This is highlighted text'
           )
         );
       });
@@ -538,7 +536,7 @@ describe('WebSocket Integration Tests', () => {
 
       const highlightMessage = receivedMessages.find(m => m.type === 'student_highlight');
       expect(highlightMessage).toBeDefined();
-      expect((highlightMessage as any).highlighted_text).toBe('This is highlighted text');
+      expect((highlightMessage as any).text).toBe('This is highlighted text');
     });
 
     it('should include passage and offset information', async () => {
@@ -559,10 +557,8 @@ describe('WebSocket Integration Tests', () => {
             'session-123',
             'student-1',
             'Student One',
-            1,
-            'Some important text in passage 2',
-            100,
-            132
+            'passage-1',
+            'Some important text in passage 2'
           )
         );
       });
@@ -572,9 +568,8 @@ describe('WebSocket Integration Tests', () => {
       });
 
       const highlightMessage = receivedMessages.find(m => m.type === 'student_highlight');
-      expect((highlightMessage as any).passage_index).toBe(1);
-      expect((highlightMessage as any).start_offset).toBe(100);
-      expect((highlightMessage as any).end_offset).toBe(132);
+      expect((highlightMessage as any).passage_id).toBe('passage-1');
+      expect((highlightMessage as any).text).toBe('Some important text in passage 2');
     });
   });
 
@@ -595,7 +590,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'TAB_SWITCH', 1)
+          createMockMessage.violation('student-1', 'TAB_SWITCH', 1)
         );
       });
 
@@ -622,7 +617,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'COPY_ATTEMPT', 1)
+          createMockMessage.violation('student-1', 'COPY_ATTEMPT', 1)
         );
       });
 
@@ -648,7 +643,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'RIGHT_CLICK', 1)
+          createMockMessage.violation('student-1', 'RIGHT_CLICK', 1)
         );
       });
 
@@ -674,7 +669,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'DEV_TOOLS', 1)
+          createMockMessage.violation('student-1', 'DEV_TOOLS', 1)
         );
       });
 
@@ -702,13 +697,13 @@ describe('WebSocket Integration Tests', () => {
       // Multiple violations
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'TAB_SWITCH', 1)
+          createMockMessage.violation('student-1', 'TAB_SWITCH', 1)
         );
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'COPY_ATTEMPT', 2)
+          createMockMessage.violation('student-1', 'COPY_ATTEMPT', 2)
         );
         mockWs?._simulateReceiveMessage(
-          createMockMessage.violation('session-123', 'student-1', 'Student One', 'TAB_SWITCH', 3)
+          createMockMessage.violation('student-1', 'TAB_SWITCH', 3)
         );
       });
 
@@ -1061,9 +1056,9 @@ describe('WebSocket Integration Tests', () => {
       act(() => {
         mockWs?._simulateReceiveMessage(createMockMessage.studentProgress('session-123', 'student-1', 'Student 1', 0, 1, 1));
         mockWs?._simulateReceiveMessage(createMockMessage.studentAnswer('session-123', 'student-1', 'Student 1', 'q-1', 1, true, false));
-        mockWs?._simulateReceiveMessage(createMockMessage.violation('session-123', 'student-1', 'Student 1', 'TAB_SWITCH', 1));
-        mockWs?._simulateReceiveMessage(createMockMessage.studentHighlight('session-123', 'student-2', 'Student 2', 0, 'highlighted text'));
-        mockWs?._simulateReceiveMessage(createMockMessage.participantJoined('session-123', 'student-3', 'Student 3', 4));
+        mockWs?._simulateReceiveMessage(createMockMessage.violation('student-1', 'TAB_SWITCH', 1));
+        mockWs?._simulateReceiveMessage(createMockMessage.studentHighlight('session-123', 'student-2', 'Student 2', 'passage-0', 'highlighted text'));
+        mockWs?._simulateReceiveMessage(createMockMessage.participantJoined('session-123', 'student-3', 4));
       });
 
       await act(async () => {
@@ -1205,8 +1200,8 @@ describe('WebSocket Integration Tests', () => {
 
       const errorMessage = receivedMessages.find(m => m.type === 'error');
       expect(errorMessage).toBeDefined();
-      expect((errorMessage as any).error).toBe('Session access denied');
-      expect((errorMessage as any).error_code).toBe('ACCESS_DENIED');
+      expect((errorMessage as any).message).toBe('Session access denied');
+      expect((errorMessage as any).code).toBe('ACCESS_DENIED');
     });
 
     it('should notify error handlers on WebSocket error', async () => {
@@ -1248,7 +1243,7 @@ describe('WebSocket Integration Tests', () => {
       const mockWs = getMockWebSocket();
       act(() => {
         mockWs?._simulateReceiveMessage(
-          createMockMessage.sessionStats('session-123', 15, 5, 3, 75, 12)
+          createMockMessage.sessionStats('session-123', 20, 15, 3, 75, 12)
         );
       });
 
@@ -1258,11 +1253,11 @@ describe('WebSocket Integration Tests', () => {
 
       const statsMessage = receivedMessages.find(m => m.type === 'session_stats');
       expect(statsMessage).toBeDefined();
-      expect((statsMessage as any).connected_students).toBe(15);
-      expect((statsMessage as any).disconnected_students).toBe(5);
-      expect((statsMessage as any).submitted_students).toBe(3);
-      expect((statsMessage as any).average_progress).toBe(75);
-      expect((statsMessage as any).total_violations).toBe(12);
+      expect((statsMessage as any).stats.total_participants).toBe(20);
+      expect((statsMessage as any).stats.connected_count).toBe(15);
+      expect((statsMessage as any).stats.submitted_count).toBe(3);
+      expect((statsMessage as any).stats.average_progress).toBe(75);
+      expect((statsMessage as any).stats.total_violations).toBe(12);
     });
   });
 });

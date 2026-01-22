@@ -80,7 +80,6 @@ export interface ParticipantJoinedMessage {
   type: 'participant_joined';
   session_id: string;
   student_id: string;
-  student_name: string;
   connected_count: number;
   timestamp: string;
 }
@@ -89,7 +88,6 @@ export interface ParticipantDisconnectedMessage {
   type: 'participant_disconnected';
   session_id: string;
   student_id: string;
-  student_name: string;
   connected_count: number;
   timestamp: string;
 }
@@ -124,18 +122,14 @@ export interface StudentHighlightMessage {
   session_id: string;
   student_id: string;
   student_name: string;
-  passage_index: number;
-  start_offset: number;
-  end_offset: number;
-  highlighted_text: string;
+  text: string;  // Truncated to first 100 characters
+  passage_id: string;
   timestamp: string;
 }
 
 export interface ViolationMessage {
   type: 'violation';
-  session_id: string;
   student_id: string;
-  student_name: string;
   violation_type: ViolationType;
   timestamp: string;
   total_count: number;
@@ -147,17 +141,22 @@ export interface StudentSubmittedMessage {
   student_id: string;
   student_name: string;
   score: number | null;
+  time_taken_seconds: number;
+  answered_questions: number;
+  total_questions: number;
   timestamp: string;
 }
 
 export interface SessionStatsMessage {
   type: 'session_stats';
   session_id: string;
-  connected_students: number;
-  disconnected_students: number;
-  submitted_students: number;
-  average_progress: number;
-  total_violations: number;
+  stats: {
+    total_participants: number;
+    connected_count: number;
+    submitted_count: number;
+    average_progress: number;
+    total_violations: number;
+  };
   timestamp: string;
 }
 
@@ -165,9 +164,8 @@ export interface SessionStatsMessage {
 
 export interface ErrorMessage {
   type: 'error';
-  error: string;
-  error_code?: string;
-  timestamp: string;
+  message: string;
+  code: string;
 }
 
 // ==================== Client → Server Messages ====================

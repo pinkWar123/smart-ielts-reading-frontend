@@ -114,14 +114,14 @@ export const SessionWaitingRoom: React.FC = () => {
       case 'participant_joined':
         if ('connected_count' in message) {
           setConnectedCount(message.connected_count);
-          console.log('Student joined:', message.student_name, '- Total connected:', message.connected_count);
+          console.log('Student joined:', message.student_id, '- Total connected:', message.connected_count);
         }
         break;
 
       case 'participant_disconnected':
         if ('connected_count' in message) {
           setConnectedCount(message.connected_count);
-          console.log('Student disconnected:', message.student_name, '- Total connected:', message.connected_count);
+          console.log('Student disconnected:', message.student_id, '- Total connected:', message.connected_count);
         }
         break;
 
@@ -142,9 +142,9 @@ export const SessionWaitingRoom: React.FC = () => {
         break;
 
       case 'error':
-        if ('error' in message) {
-          console.error('WebSocket error:', message.error);
-          alert(`Error: ${message.error}`);
+        if ('message' in message) {
+          console.error('WebSocket error:', message.message, 'Code:', message.code);
+          alert(`Error: ${message.message}`);
         }
         break;
 

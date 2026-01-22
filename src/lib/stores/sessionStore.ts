@@ -2,20 +2,25 @@ import { create } from 'zustand';
 import {
   sessionsApi,
   type Session,
+  type SessionSummaryDTO,
+  type StudentSessionDTO,
   type CreateSessionRequest,
   type SessionStats,
 } from '../api/sessions';
+import type { PaginationMeta } from '../api/tests';
 
 interface SessionStore {
   // State
-  sessions: Session[];
+  sessions: SessionSummaryDTO[];
+  studentSessions: StudentSessionDTO[];
   currentSession: Session | null;
   sessionStats: SessionStats | null;
+  paginationMeta: PaginationMeta | null;
   loading: boolean;
   error: string | null;
 
   // Actions
-  fetchSessions: () => Promise<void>;
+  fetchSessions: (teacherId?: string, classId?: string) => Promise<void>;
   fetchMySessions: () => Promise<void>;
   fetchSessionById: (sessionId: string) => Promise<void>;
   createSession: (data: CreateSessionRequest) => Promise<Session>;
@@ -31,17 +36,30 @@ interface SessionStore {
 export const useSessionStore = create<SessionStore>((set, get) => ({
   // Initial state
   sessions: [],
+  studentSessions: [],
   currentSession: null,
   sessionStats: null,
+  paginationMeta: null,
   loading: false,
   error: null,
 
-  // Fetch all sessions (admin)
-  fetchSessions: async () => {
+  // Fetch all sessions (admin/teacher)
+  fetchSessions: async (teacherId?: string, classId?: string) => {
     set({ loading: true, error: null });
     try {
-      const sessions = await sessionsApi.getAllSessions();
-      set({ sessions, loading: false });
+      const response = await sessionsApi.getAllSessions(
+        1, 
+        10, 
+        'created_at', 
+        'desc',
+        teacherId,
+        classId
+      );
+      set({ 
+        sessions: response.data,
+        paginationMeta: response.meta,
+        loading: false 
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch sessions';
       set({ error: message, loading: false });
@@ -53,8 +71,12 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   fetchMySessions: async () => {
     set({ loading: true, error: null });
     try {
-      const sessions = await sessionsApi.getMySessions();
-      set({ sessions, loading: false });
+      const response = await sessionsApi.getMySessions(1, 100, 'created_at', 'desc');
+      set({ 
+        studentSessions: response.data,
+        paginationMeta: response.meta,
+        loading: false 
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch my sessions';
       set({ error: message, loading: false });
@@ -68,14 +90,6 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     try {
       const session = await sessionsApi.getSessionById(sessionId);
       set({ currentSession: session, loading: false });
-
-      // Update in sessions list if exists
-      const sessions = get().sessions;
-      const index = sessions.findIndex((s) => s.id === sessionId);
-      if (index >= 0) {
-        sessions[index] = session;
-        set({ sessions: [...sessions] });
-      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch session';
       set({ error: message, loading: false });
@@ -88,10 +102,8 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const newSession = await sessionsApi.createSession(data);
-      set((state) => ({
-        sessions: [...state.sessions, newSession],
-        loading: false,
-      }));
+      // Refresh the list to get updated paginated data
+      await get().fetchSessions();
       return newSession;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create session';
@@ -105,14 +117,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedSession = await sessionsApi.startWaitingPhase(sessionId);
-      set((state) => {
-        const sessions = state.sessions.map((s) =>
-          s.id === sessionId ? updatedSession : s
-        );
-        const currentSession =
-          state.currentSession?.id === sessionId ? updatedSession : state.currentSession;
-        return { sessions, currentSession, loading: false };
-      });
+      // Refresh the list to get updated data
+      await get().fetchSessions();
+      const currentSession = get().currentSession?.id === sessionId ? updatedSession : get().currentSession;
+      set({ currentSession, loading: false });
       return updatedSession;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start waiting phase';
@@ -126,14 +134,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedSession = await sessionsApi.startSession(sessionId);
-      set((state) => {
-        const sessions = state.sessions.map((s) =>
-          s.id === sessionId ? updatedSession : s
-        );
-        const currentSession =
-          state.currentSession?.id === sessionId ? updatedSession : state.currentSession;
-        return { sessions, currentSession, loading: false };
-      });
+      // Refresh the list to get updated data
+      await get().fetchSessions();
+      const currentSession = get().currentSession?.id === sessionId ? updatedSession : get().currentSession;
+      set({ currentSession, loading: false });
       return updatedSession;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to start session';
@@ -147,14 +151,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updatedSession = await sessionsApi.completeSession(sessionId);
-      set((state) => {
-        const sessions = state.sessions.map((s) =>
-          s.id === sessionId ? updatedSession : s
-        );
-        const currentSession =
-          state.currentSession?.id === sessionId ? updatedSession : state.currentSession;
-        return { sessions, currentSession, loading: false };
-      });
+      // Refresh the list to get updated data
+      await get().fetchSessions();
+      const currentSession = get().currentSession?.id === sessionId ? updatedSession : get().currentSession;
+      set({ currentSession, loading: false });
       return updatedSession;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to complete session';
@@ -168,12 +168,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await sessionsApi.deleteSession(sessionId);
-      set((state) => {
-        const sessions = state.sessions.filter((s) => s.id !== sessionId);
-        const currentSession =
-          state.currentSession?.id === sessionId ? null : state.currentSession;
-        return { sessions, currentSession, loading: false };
-      });
+      // Refresh the list to get updated paginated data
+      await get().fetchSessions();
+      const currentSession = get().currentSession?.id === sessionId ? null : get().currentSession;
+      set({ currentSession, loading: false });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to delete session';
       set({ error: message, loading: false });

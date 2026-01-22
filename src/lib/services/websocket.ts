@@ -204,8 +204,10 @@ export class SessionWebSocketService {
    * Disconnect from session
    */
   disconnect(): void {
+    console.log('Disconnecting WebSocket session');
     this.shouldReconnect = false;
     this._stopHeartbeat();
+    this._stopPingTimeout();
 
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);

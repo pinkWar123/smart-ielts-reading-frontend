@@ -15,6 +15,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { AuthInitializer, ProtectedRoute } from './components/auth';
 import { ClassManagement } from './pages/admin/ClassManagement';
+import { ClassDetail } from './pages/admin/ClassDetail';
 import { SessionManagement } from './pages/admin/SessionManagement';
 import { SessionMonitoring } from './pages/admin/SessionMonitoring';
 import { MySessions } from './pages/student/MySessions';
@@ -23,7 +24,7 @@ import { SessionTestInterface } from './pages/student/SessionTestInterface';
 import { SessionResults } from './pages/student/SessionResults';
 import { useAuthStore } from './lib/stores/authStore';
 import { UserRole } from './lib/types/auth';
-import { LogOut, User, Shield, GraduationCap, BookOpen } from 'lucide-react';
+import { LogOut, Shield, GraduationCap, BookOpen } from 'lucide-react';
 
 function HomePage() {
   const { isAuthenticated, user, logout } = useAuthStore();
@@ -283,6 +284,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.TEACHER]}>
                 <ClassManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/classes/:classId"
+            element={
+              <ProtectedRoute allowedRoles={[UserRole.ADMIN, UserRole.TEACHER]}>
+                <ClassDetail />
               </ProtectedRoute>
             }
           />

@@ -37,10 +37,12 @@ import {
 } from 'lucide-react';
 import {
   passagesApi,
+  testsApi,
   type GetPassageDetailByIdResponse,
   type PassageDetailQuestionGroupDTO,
   type PassageDetailQuestionDTO,
   type UpdatePassageWithQuestionsRequest,
+  type CreateCompletePassageRequest,
   type QuestionType,
   type QuestionOptionDTO,
   type AuthorInfo,
@@ -118,9 +120,13 @@ export const PassageEdit: React.FC = () => {
   const { testId, passageId } = useParams<{ testId: string; passageId: string }>();
   const navigate = useNavigate();
 
+  // Check if we're creating a new passage
+  const isNewPassage = passageId === 'new';
+
   const [passage, setPassage] = useState<EditablePassage | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!isNewPassage); // Don't show loading for new passage
   const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -161,10 +167,24 @@ export const PassageEdit: React.FC = () => {
   });
 
   useEffect(() => {
-    if (passageId) {
+    if (isNewPassage) {
+      // Initialize empty passage for creation
+      const emptyPassage: EditablePassage = {
+        title: '',
+        content: '',
+        difficulty_level: 2,
+        topic: '',
+        source: null,
+        question_groups: [],
+        created_by: null,
+      };
+      setPassage(emptyPassage);
+      initializeEditFields(emptyPassage);
+      setIsEditingContent(true); // Start in edit mode for new passage
+    } else if (passageId) {
       loadPassage();
     }
-  }, [passageId]);
+  }, [passageId, isNewPassage]);
 
   const loadPassage = async () => {
     if (!passageId) return;
@@ -273,11 +293,65 @@ export const PassageEdit: React.FC = () => {
     }
   };
 
-  const handleCancelEdit = () => {
-    if (passage) {
-      initializeEditFields(passage);
+  // Create a new passage and add it to the test
+  const handleCreatePassage = async () => {
+    if (!passage || !testId) return;
+
+    // Validate required fields
+    if (!editedTitle.trim()) {
+      setError('Please enter a title for the passage');
+      return;
     }
-    setIsEditingContent(false);
+    if (!editedContent.trim()) {
+      setError('Please enter content for the passage');
+      return;
+    }
+    if (!editedTopic.trim()) {
+      setError('Please enter a topic for the passage');
+      return;
+    }
+
+    setIsCreating(true);
+    setError(null);
+    try {
+      // Create the passage with minimal data (no questions yet)
+      const createRequest: CreateCompletePassageRequest = {
+        title: editedTitle,
+        content: editedContent,
+        difficulty_level: editedDifficulty,
+        topic: editedTopic,
+        source: editedSource || null,
+        questions: [], // Start with no questions
+      };
+
+      const createdPassage = await passagesApi.createCompletePassage(createRequest);
+      
+      // Add the passage to the test
+      await testsApi.addPassageToTest(testId, createdPassage.id);
+
+      setSuccessMessage('Passage created and added to test successfully!');
+      
+      // Navigate to the edit page for the new passage
+      navigate(`/admin/test/${testId}/passage/${createdPassage.id}`, { replace: true });
+    } catch (err) {
+      console.error('Failed to create passage:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create passage');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (isNewPassage) {
+      // For new passages, cancel navigates back to the test
+      navigate(`/admin/test/${testId}`);
+    } else {
+      // For existing passages, reset to original values
+      if (passage) {
+        initializeEditFields(passage);
+      }
+      setIsEditingContent(false);
+    }
   };
 
   // Question Group Editing
@@ -535,12 +609,18 @@ export const PassageEdit: React.FC = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-white">Passage Content</CardTitle>
+                <CardTitle className="text-white">
+                  {isNewPassage ? 'Create New Passage' : 'Passage Content'}
+                </CardTitle>
                 <CardDescription className="text-slate-400">
-                  {isEditingContent ? 'Edit the passage details' : 'View and edit passage content'}
+                  {isNewPassage 
+                    ? 'Enter the passage details to create a new passage for this test'
+                    : isEditingContent 
+                      ? 'Edit the passage details' 
+                      : 'View and edit passage content'}
                 </CardDescription>
               </div>
-              {!isEditingContent && (
+              {!isEditingContent && !isNewPassage && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -677,7 +757,8 @@ export const PassageEdit: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Questions Section */}
+        {/* Questions Section - Only show for existing passages */}
+        {!isNewPassage && (
         <Card className="bg-slate-900/50 border-slate-800">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -1133,52 +1214,86 @@ export const PassageEdit: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Save All Section */}
         <Card className="bg-slate-900/50 border-slate-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-white font-medium">
-                  Save All Changes
-                </p>
-                <p className="text-sm text-slate-400">
-                  Saves passage content, question groups, and all questions to the server (requires 13-14 questions)
-                </p>
-                {(totalQuestions < 13 || totalQuestions > 14) && (
-                  <p className="text-sm text-amber-400 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    Currently {totalQuestions} questions (need 13-14)
-                  </p>
+                {isNewPassage ? (
+                  <>
+                    <p className="text-sm text-white font-medium">
+                      Create Passage
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      Creates the passage and adds it to the current test. You can add questions later.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-white font-medium">
+                      Save All Changes
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      Saves passage content, question groups, and all questions to the server (requires 13-14 questions)
+                    </p>
+                    {(totalQuestions < 13 || totalQuestions > 14) && (
+                      <p className="text-sm text-amber-400 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        Currently {totalQuestions} questions (need 13-14)
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
               <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/admin/test/${testId}`)}
-            className="border-slate-700 text-slate-300 hover:bg-slate-800"
-          >
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Back to Test
-          </Button>
                 <Button
-                  onClick={handleSaveAllWithQuestions}
-                  disabled={isSavingAll || totalQuestions < 13 || totalQuestions > 14}
-                  className="bg-indigo-600 hover:bg-indigo-500"
+                  variant="outline"
+                  onClick={() => navigate(`/admin/test/${testId}`)}
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
                 >
-                  {isSavingAll ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save All Changes
-                    </>
-                  )}
-          </Button>
-        </div>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  {isNewPassage ? 'Cancel' : 'Back to Test'}
+                </Button>
+                {isNewPassage ? (
+                  <Button
+                    onClick={handleCreatePassage}
+                    disabled={isCreating || !editedTitle.trim() || !editedContent.trim() || !editedTopic.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-500"
+                  >
+                    {isCreating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Passage
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSaveAllWithQuestions}
+                    disabled={isSavingAll || totalQuestions < 13 || totalQuestions > 14}
+                    className="bg-indigo-600 hover:bg-indigo-500"
+                  >
+                    {isSavingAll ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-4 w-4" />
+                        Save All Changes
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

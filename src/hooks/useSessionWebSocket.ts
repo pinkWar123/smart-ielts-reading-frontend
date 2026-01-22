@@ -106,11 +106,10 @@ export function useSessionWebSocket(
     }
 
     return () => {
-      // Only disconnect if this hook is unmounting and we're connected to this session
-      if (serviceRef.current.getStatus() !== 'disconnected') {
-        // Don't disconnect here - let the component decide when to disconnect
-        // This allows multiple components to use the same WebSocket connection
-      }
+      // Disconnect when component unmounts or sessionId changes
+      console.log('useSessionWebSocket: Cleaning up, disconnecting WebSocket');
+      serviceRef.current.disconnect();
+      setStatus('disconnected');
     };
   }, [autoConnect, enabled, sessionId, connect]);
 

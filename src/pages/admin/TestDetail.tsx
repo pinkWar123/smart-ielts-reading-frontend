@@ -48,6 +48,7 @@ import {
   type PassageDetailQuestionGroupDTO,
   type PassageDetailQuestionDTO,
 } from '@/lib/api/tests';
+import { AddPassageModal } from '@/components/admin/AddPassageModal';
 
 const MAX_PASSAGES_FULL_TEST = 3;
 const MAX_PASSAGES_SINGLE = 1;
@@ -83,6 +84,7 @@ export const TestDetail: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showQuestions, setShowQuestions] = useState(false);
   const [activePassageTab, setActivePassageTab] = useState<string>('0');
+  const [showAddPassageModal, setShowAddPassageModal] = useState(false);
 
   useEffect(() => {
     if (testId) {
@@ -597,12 +599,13 @@ export const TestDetail: React.FC = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-white">Passages</h2>
             {canAddMorePassages() && (
-              <Link to={`/admin/test/${test.id}/passage/new`}>
-                <Button className="bg-indigo-600 hover:bg-indigo-500">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Passage
-                </Button>
-              </Link>
+              <Button 
+                className="bg-indigo-600 hover:bg-indigo-500"
+                onClick={() => setShowAddPassageModal(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Passage
+              </Button>
             )}
           </div>
 
@@ -619,12 +622,13 @@ export const TestDetail: React.FC = () => {
                       Add passages to complete this test
                     </p>
                   </div>
-                  <Link to={`/admin/test/${test.id}/passage/new`}>
-                    <Button className="bg-indigo-600 hover:bg-indigo-500 mt-4">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add First Passage
-                    </Button>
-                  </Link>
+                  <Button 
+                    className="bg-indigo-600 hover:bg-indigo-500 mt-4"
+                    onClick={() => setShowAddPassageModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Passage
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -701,6 +705,15 @@ export const TestDetail: React.FC = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Add Passage Modal */}
+      <AddPassageModal
+        isOpen={showAddPassageModal}
+        onClose={() => setShowAddPassageModal(false)}
+        testId={test.id}
+        existingPassageIds={test.passages.map((p) => p.id)}
+        onPassageAdded={loadTestDetail}
+      />
     </div>
   );
 };

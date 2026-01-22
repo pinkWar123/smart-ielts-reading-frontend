@@ -170,16 +170,19 @@ export const StudentActivityFeed: React.FC<StudentActivityFeedProps> = ({
       case 'answer':
         return `Answered Question ${activity.data.questionNumber || activity.data.question_number}${activity.data.is_update ? ' (updated)' : ''}`;
       case 'highlight':
-        const text = activity.data.text || activity.data.highlighted_text || '';
+        const text = activity.data.text || '';
         const preview = text.length > 50 ? text.substring(0, 50) + '...' : text;
         return `Highlighted: "${preview}"`;
       case 'violation':
-        return `Violation: ${activity.data.violation_type || activity.data.violationType}`;
+        return `Violation: ${activity.data.violationType || activity.data.violation_type}`;
       case 'submission':
         const score = activity.data.score !== null && activity.data.score !== undefined 
           ? ` (Score: ${activity.data.score})` 
           : '';
-        return `Submitted test${score}`;
+        const answered = activity.data.answeredQuestions !== undefined && activity.data.totalQuestions !== undefined
+          ? ` - ${activity.data.answeredQuestions}/${activity.data.totalQuestions} answered`
+          : '';
+        return `Submitted test${score}${answered}`;
       case 'joined':
         return 'Joined the session';
       case 'disconnected':
@@ -317,6 +320,8 @@ export const StudentActivityFeed: React.FC<StudentActivityFeedProps> = ({
 };
 
 // Helper function to convert WebSocket messages to activities
+// studentNameLookup is an optional map to resolve student_id to student_name
+// for messages that don't include student_name (like violation, participant_joined, participant_disconnected)
 export function createActivityFromMessage(
   message: 
     | StudentProgressMessage 
@@ -325,12 +330,24 @@ export function createActivityFromMessage(
     | ViolationMessage 
     | StudentSubmittedMessage
     | ParticipantJoinedMessage
-    | ParticipantDisconnectedMessage
+    | ParticipantDisconnectedMessage,
+  studentNameLookup?: Map<string, string>
 ): Activity {
+  // Get student name - some messages have it directly, others need lookup
+  const getStudentName = (): string => {
+    if ('student_name' in message && message.student_name) {
+      return message.student_name;
+    }
+    if (studentNameLookup && 'student_id' in message) {
+      return studentNameLookup.get(message.student_id) || 'Unknown Student';
+    }
+    return 'Unknown Student';
+  };
+
   const baseActivity = {
     id: `${message.timestamp}-${Math.random()}`,
     studentId: 'student_id' in message ? message.student_id : '',
-    studentName: 'student_name' in message ? message.student_name : 'Unknown',
+    studentName: getStudentName(),
     timestamp: message.timestamp,
   };
 
@@ -360,8 +377,8 @@ export function createActivityFromMessage(
         ...baseActivity,
         type: 'highlight',
         data: {
-          text: message.highlighted_text,
-          passageIndex: message.passage_index,
+          text: message.text,  // Updated from highlighted_text
+          passageId: message.passage_id,  // Updated from passage_index
         },
       };
     case 'violation':
@@ -379,6 +396,9 @@ export function createActivityFromMessage(
         type: 'submission',
         data: {
           score: message.score,
+          timeTakenSeconds: message.time_taken_seconds,
+          answeredQuestions: message.answered_questions,
+          totalQuestions: message.total_questions,
         },
       };
     case 'participant_joined':

@@ -1,5 +1,5 @@
 import { useAuthStore } from '../stores/authStore';
-import { ApiError, handleResponse } from './tests';
+import { ApiError, handleResponse, type PaginationMeta } from './tests';
 
 // API base URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -24,15 +24,46 @@ export type SessionStatus =
   | 'COMPLETED' 
   | 'CANCELLED';
 
+// User info structure
+export interface UserInfo {
+  id: string;
+  username: string;
+  email: string;
+  role: 'ADMIN' | 'STUDENT' | 'TEACHER';
+  full_name: string;
+}
+
+// Class detail (from GET /classes/{id})
 export interface Class {
   id: string;
   name: string;
   description: string | null;
-  teacher_id: string;
-  student_ids: string[];
+  status: ClassStatus;
+  teachers: UserInfo[];
+  students: UserInfo[];
+  created_at: string;
+  created_by: UserInfo;
+  updated_at: string | null;
+}
+
+// Class list item (for paginated list view)
+export interface ClassListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  students_count: number;
   status: ClassStatus;
   created_at: string;
-  updated_at: string | null;
+  created_by: {
+    id: string;
+    username: string;
+  };
+}
+
+// Paginated classes response
+export interface GetPaginatedClassesResponse {
+  data: ClassListItem[];
+  meta: PaginationMeta;
 }
 
 export interface CreateClassRequest {
@@ -66,6 +97,49 @@ export interface Session {
   created_by: string;
   created_at: string;
   updated_at: string | null;
+}
+
+// Session summary (for paginated list view - admin/teacher)
+export interface SessionSummaryDTO {
+  id: string;
+  class_id: string;
+  test_id: string;
+  title: string;
+  scheduled_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  status: SessionStatus;
+  participant_count: number;
+  created_by: string;
+  created_at: string;
+}
+
+// Student session summary (for student's my-sessions view)
+export interface StudentSessionDTO {
+  id: string;
+  class_id: string;
+  test_id: string;
+  title: string;
+  scheduled_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  status: SessionStatus;
+  my_attempt_id: string | null;
+  my_joined_at: string | null;
+  my_connection_status: string | null;
+  created_at: string;
+}
+
+// Paginated sessions response (admin/teacher)
+export interface GetPaginatedSessionsResponse {
+  data: SessionSummaryDTO[];
+  meta: PaginationMeta;
+}
+
+// Paginated student sessions response
+export interface GetMySessionsResponse {
+  data: StudentSessionDTO[];
+  meta: PaginationMeta;
 }
 
 export interface CreateSessionRequest {
@@ -105,15 +179,23 @@ export interface SessionStats {
   time_remaining: number | null; // seconds remaining, null if not started
 }
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  full_name: string;
-  role: 'ADMIN' | 'STUDENT' | 'TEACHER';
+// Deprecated: Use UserInfo instead
+export type User = UserInfo;
+
+// Query users response
+export interface QueryUsersResponse {
+  users: UserInfo[];
 }
 
 export interface EnrollStudentRequest {
+  student_id: string;
+}
+
+export interface AddTeacherRequest {
+  teacher_id: string;
+}
+
+export interface AddStudentRequest {
   student_id: string;
 }
 
@@ -123,8 +205,25 @@ export const sessionsApi = {
   /**
    * Get all classes (admin/teacher)
    */
-  async getAllClasses(): Promise<Class[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/classes`, {
+  async getAllClasses(
+      page: number = 1,
+      pageSize: number = 10,
+      sortBy: string = 'created_at',
+      sortOrder: 'asc' | 'desc' = 'desc',
+      teacher_id: string | null = null
+  ): Promise<GetPaginatedClassesResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    });
+
+    if (teacher_id) {
+      params.append('teacher_id', teacher_id);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/classes?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +231,7 @@ export const sessionsApi = {
       },
     });
 
-    return handleResponse<Class[]>(response);
+    return handleResponse<GetPaginatedClassesResponse>(response);
   },
 
   /**
@@ -207,6 +306,46 @@ export const sessionsApi = {
   /**
    * Enroll a student in a class
    */
+  /**
+   * Add teacher to class
+   */
+  async addTeacher(classId: string, teacherId: string): Promise<Class> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/classes/${classId}/teachers`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        body: JSON.stringify({ teacher_id: teacherId }),
+      }
+    );
+
+    return handleResponse<Class>(response);
+  },
+
+  /**
+   * Remove teacher from class
+   */
+  async removeTeacher(classId: string, teacherId: string): Promise<void> {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/classes/${classId}/teachers/${teacherId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+      }
+    );
+
+    return handleResponse<void>(response);
+  },
+
+  /**
+   * Add student to class
+   */
   async enrollStudent(classId: string, studentId: string): Promise<Class> {
     const response = await fetch(
       `${API_BASE_URL}/api/v1/classes/${classId}/students`,
@@ -251,6 +390,26 @@ export const sessionsApi = {
   /**
    * Get all students (for enrollment)
    */
+  /**
+   * Query users by role and search query
+   */
+  async queryUsers(role?: 'ADMIN' | 'TEACHER' | 'STUDENT', query?: string, limit: number = 10): Promise<QueryUsersResponse> {
+    const params = new URLSearchParams();
+    if (role) params.append('role', role);
+    if (query) params.append('q', query);
+    if (limit) params.append('limit', limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/users?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    });
+
+    return handleResponse<QueryUsersResponse>(response);
+  },
+
   async getAllStudents(): Promise<User[]> {
     const response = await fetch(`${API_BASE_URL}/api/v1/users?role=STUDENT`, {
       method: 'GET',
@@ -264,10 +423,27 @@ export const sessionsApi = {
   },
 
   /**
-   * Get all sessions (admin)
+   * Get all sessions (admin/teacher) with pagination
    */
-  async getAllSessions(): Promise<Session[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
+  async getAllSessions(
+    page: number = 1,
+    pageSize: number = 10,
+    sortBy: string = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'desc',
+    teacherId?: string,
+    classId?: string
+  ): Promise<GetPaginatedSessionsResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    });
+
+    if (teacherId) params.append('teacher_id', teacherId);
+    if (classId) params.append('class_id', classId);
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessions?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -275,14 +451,26 @@ export const sessionsApi = {
       },
     });
 
-    return handleResponse<Session[]>(response);
+    return handleResponse<GetPaginatedSessionsResponse>(response);
   },
 
   /**
-   * Get my sessions (student)
+   * Get my sessions (student) with pagination
    */
-  async getMySessions(): Promise<Session[]> {
-    const response = await fetch(`${API_BASE_URL}/api/v1/sessions/my-sessions`, {
+  async getMySessions(
+    page: number = 1,
+    pageSize: number = 10,
+    sortBy: string = 'created_at',
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ): Promise<GetMySessionsResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    });
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/sessions/my-sessions?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -290,7 +478,7 @@ export const sessionsApi = {
       },
     });
 
-    return handleResponse<Session[]>(response);
+    return handleResponse<GetMySessionsResponse>(response);
   },
 
   /**

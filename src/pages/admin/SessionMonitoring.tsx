@@ -209,6 +209,7 @@ export const SessionMonitoring: React.FC = () => {
       if (student) {
         newMap.set(msg.student_id, {
           ...student,
+          student_name: msg.student_name, // Update name from message
           current_passage: msg.passage_index + 1,
           current_question: msg.question_number,
           last_activity: msg.timestamp,
@@ -225,6 +226,7 @@ export const SessionMonitoring: React.FC = () => {
       if (student) {
         newMap.set(msg.student_id, {
           ...student,
+          student_name: msg.student_name, // Update name from message
           answers_submitted: msg.answered ? student.answers_submitted + (msg.is_update ? 0 : 1) : student.answers_submitted,
           last_activity: msg.timestamp,
         });
@@ -240,6 +242,7 @@ export const SessionMonitoring: React.FC = () => {
       if (student) {
         newMap.set(msg.student_id, {
           ...student,
+          student_name: msg.student_name, // Update name from message
           highlights_count: (student.highlights_count || 0) + 1,
           last_activity: msg.timestamp,
         });
@@ -276,8 +279,12 @@ export const SessionMonitoring: React.FC = () => {
       if (student) {
         newMap.set(msg.student_id, {
           ...student,
+          student_name: msg.student_name, // Update name from message
           is_submitted: true,
           score: msg.score,
+          time_taken_seconds: msg.time_taken_seconds,
+          answers_submitted: msg.answered_questions,
+          total_questions: msg.total_questions,
           last_activity: msg.timestamp,
         });
       }
@@ -299,9 +306,12 @@ export const SessionMonitoring: React.FC = () => {
     setStudents((prev) => {
       const newMap = new Map(prev);
       if (!newMap.has(msg.student_id)) {
+        // Student not in our map yet - create with placeholder name
+        // The name will be populated from other messages (student_progress, student_answer, etc.)
+        // or from the next API stats fetch
         newMap.set(msg.student_id, {
           student_id: msg.student_id,
-          student_name: msg.student_name,
+          student_name: 'Loading...', // Placeholder until we get name from other messages
           connection_status: 'CONNECTED',
           total_questions: 40,
           answers_submitted: 0,
@@ -358,12 +368,13 @@ export const SessionMonitoring: React.FC = () => {
   const handleSessionStats = useCallback((msg: SessionStatsMessage) => {
     setSessionStats((prev) => ({
       ...prev!,
-      connected_students: msg.connected_students,
-      disconnected_students: msg.disconnected_students,
-      submitted_students: msg.submitted_students,
-      not_submitted_students: prev!.total_students - msg.submitted_students,
-      average_progress: msg.average_progress,
-      total_violations: msg.total_violations,
+      total_students: msg.stats.total_participants,
+      connected_students: msg.stats.connected_count,
+      disconnected_students: msg.stats.total_participants - msg.stats.connected_count,
+      submitted_students: msg.stats.submitted_count,
+      not_submitted_students: msg.stats.total_participants - msg.stats.submitted_count,
+      average_progress: msg.stats.average_progress,
+      total_violations: msg.stats.total_violations,
     }));
   }, []);
 
