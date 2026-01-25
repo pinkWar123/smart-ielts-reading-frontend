@@ -162,6 +162,11 @@ export interface TestResponse {
   is_active: boolean;
 }
 
+export interface PublishTestResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface TestListItem {
   test_id: string;
   title: string;
@@ -645,7 +650,7 @@ export const testsApi = {
   /**
    * Publish a test (change status to PUBLISHED)
    */
-  async publishTest(testId: string): Promise<TestResponse> {
+  async publishTest(testId: string): Promise<PublishTestResponse> {
     const response = await fetch(`${API_BASE_URL}/api/v1/tests/${testId}/publish`, {
       method: 'POST',
       headers: {
@@ -654,13 +659,13 @@ export const testsApi = {
       },
     });
 
-    return handleResponse<TestResponse>(response);
+    return handleResponse<PublishTestResponse>(response);
   },
 
   /**
    * Unpublish a test (change status to DRAFT)
    */
-  async unpublishTest(testId: string): Promise<TestResponse> {
+  async unpublishTest(testId: string): Promise<PublishTestResponse> {
     const response = await fetch(`${API_BASE_URL}/api/v1/tests/${testId}/unpublish`, {
       method: 'POST',
       headers: {
@@ -669,7 +674,7 @@ export const testsApi = {
       },
     });
 
-    return handleResponse<TestResponse>(response);
+    return handleResponse<PublishTestResponse>(response);
   },
 
   /**

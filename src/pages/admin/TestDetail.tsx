@@ -229,11 +229,15 @@ export const TestDetail: React.FC = () => {
     
     setIsPublishing(true);
     try {
-      if (test.status === 'PUBLISHED') {
-        await testsApi.unpublishTest(test.id);
-      } else {
-        await testsApi.publishTest(test.id);
+      const response = test.status === 'PUBLISHED'
+        ? await testsApi.unpublishTest(test.id)
+        : await testsApi.publishTest(test.id);
+      
+      if (response.success === false) {
+        setError(response.message);
+        return;
       }
+      
       await loadTestDetail();
     } catch (err) {
       console.error('Failed to publish/unpublish test:', err);
