@@ -221,6 +221,30 @@ export interface PassageResponse {
   is_active: boolean;
 }
 
+// Pagination types
+export interface PaginationMeta {
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+}
+
+export interface GetPaginatedPassagesResponse {
+  data: PassageResponse[];
+  meta: PaginationMeta;
+}
+
+export interface GetPaginatedPassagesParams {
+  page?: number;
+  page_size?: number;
+  exclude_passage_ids?: string[];
+  topic?: string;
+  difficulty_level?: number;
+  search?: string;
+}
+
 export interface CompletePassageResponse extends PassageResponse {
   question_groups: QuestionGroupResponseDTO[];
   questions: QuestionResponseDTO[];
@@ -804,7 +828,7 @@ export const passagesApi = {
   },
 
   /**
-   * Get all passages
+   * Get all passages (deprecated - use getPaginatedPassages instead)
    */
   async getAllPassages(): Promise<PassageResponse[]> {
     const response = await fetch(`${API_BASE_URL}/api/v1/passages`, {
@@ -816,6 +840,37 @@ export const passagesApi = {
     });
 
     return handleResponse<PassageResponse[]>(response);
+  },
+
+  /**
+   * Get paginated passages with optional filters
+   */
+  async getPaginatedPassages(params: GetPaginatedPassagesParams = {}): Promise<GetPaginatedPassagesResponse> {
+    const searchParams = new URLSearchParams();
+    
+    if (params.page) searchParams.append('page', params.page.toString());
+    if (params.page_size) searchParams.append('page_size', params.page_size.toString());
+    if (params.topic) searchParams.append('topic', params.topic);
+    if (params.difficulty_level) searchParams.append('difficulty_level', params.difficulty_level.toString());
+    if (params.search) searchParams.append('search', params.search);
+    
+    // Handle array of exclude_passage_ids
+    if (params.exclude_passage_ids && params.exclude_passage_ids.length > 0) {
+      params.exclude_passage_ids.forEach(id => searchParams.append('exclude_passage_ids', id));
+    }
+    
+    const queryString = searchParams.toString();
+    const url = `${API_BASE_URL}/api/v1/passages${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+    });
+
+    return handleResponse<GetPaginatedPassagesResponse>(response);
   },
 
   /**

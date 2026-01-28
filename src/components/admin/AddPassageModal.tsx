@@ -35,6 +35,7 @@ import {
   type PassageResponse,
   type CreateCompletePassageRequest,
   type QuestionDTO,
+  type PaginationMeta,
 } from '@/lib/api/tests';
 import useAdminStore from '@/lib/stores/adminStore';
 
@@ -69,7 +70,10 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
   // Existing passage state
   const [passages, setPassages] = useState<PassageResponse[]>([]);
   const [isLoadingPassages, setIsLoadingPassages] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [paginationMeta, setPaginationMeta] = useState<PaginationMeta | null>(null);
   const [selectedPassageId, setSelectedPassageId] = useState<string | null>(null);
   const [isAddingPassage, setIsAddingPassage] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,12 +97,20 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
     resetPassageWorkflow,
   } = useAdminStore();
 
-  // Load passages when modal opens
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Load passages when modal opens or search query changes
   useEffect(() => {
     if (isOpen && activeTab === 'existing') {
-      loadPassages();
+      loadPassages(1, true);
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen, activeTab, debouncedSearchQuery, existingPassageIds]);
 
   // Timer for extraction progress
   useEffect(() => {
@@ -124,6 +136,9 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
     if (!isOpen) {
       setSelectedPassageId(null);
       setSearchQuery('');
+      setDebouncedSearchQuery('');
+      setPassages([]);
+      setPaginationMeta(null);
       setError(null);
       setSuccessMessage(null);
       setActiveTab('existing');
@@ -140,29 +155,42 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
     resetPassageWorkflow();
   };
 
-  const loadPassages = async () => {
-    setIsLoadingPassages(true);
+  const loadPassages = async (page: number = 1, reset: boolean = false) => {
+    if (reset) {
+      setIsLoadingPassages(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     setError(null);
+    
     try {
-      const allPassages = await passagesApi.getAllPassages();
-      // Filter out passages already in the test
-      const availablePassages = allPassages.filter(
-        (p) => !existingPassageIds.includes(p.id)
-      );
-      setPassages(availablePassages);
+      const response = await passagesApi.getPaginatedPassages({
+        page,
+        page_size: 10,
+        exclude_passage_ids: existingPassageIds,
+        search: debouncedSearchQuery || undefined,
+      });
+      
+      if (reset) {
+        setPassages(response.data);
+      } else {
+        setPassages((prev) => [...prev, ...response.data]);
+      }
+      setPaginationMeta(response.meta);
     } catch (err) {
       console.error('Failed to load passages:', err);
       setError(err instanceof Error ? err.message : 'Failed to load passages');
     } finally {
       setIsLoadingPassages(false);
+      setIsLoadingMore(false);
     }
   };
 
-  const filteredPassages = passages.filter(
-    (p) =>
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.topic.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleLoadMore = () => {
+    if (paginationMeta && paginationMeta.has_next) {
+      loadPassages(paginationMeta.page + 1, false);
+    }
+  };
 
   const handleAddExistingPassage = async () => {
     if (!selectedPassageId) return;
@@ -415,13 +443,13 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
                   <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
                   <span className="ml-2 text-slate-400">Loading passages...</span>
                 </div>
-              ) : filteredPassages.length === 0 ? (
+              ) : passages.length === 0 ? (
                 <div className="text-center py-8 text-slate-400">
                   {searchQuery ? 'No passages match your search' : 'No passages available'}
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {filteredPassages.map((passage) => (
+                  {passages.map((passage) => (
                     <Card
                       key={passage.id}
                       className={`cursor-pointer transition-all ${
@@ -457,6 +485,29 @@ export const AddPassageModal: React.FC<AddPassageModalProps> = ({
                       </CardContent>
                     </Card>
                   ))}
+                  
+                  {/* Load More Button */}
+                  {paginationMeta && paginationMeta.has_next && (
+                    <div className="flex justify-center pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={handleLoadMore}
+                        disabled={isLoadingMore}
+                        className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                      >
+                        {isLoadingMore ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            Load More ({paginationMeta.total_count - passages.length} remaining)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </ScrollArea>
